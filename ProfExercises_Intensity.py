@@ -11,6 +11,21 @@ import sklearn
 import timm
 import torchvision
 import matplotlib.pyplot as plt
+from enum import Enum
+
+class IntTransform(Enum):
+    ORIGINAL = "Original"
+    NEGATIVE = "Negative"
+    
+def do_transform(image, chosenT):
+    if chosenT == IntTransform.ORIGINAL:
+        output = np.copy(image)
+        transform = np.arange(256, dtype="uint8")
+    elif chosenT == IntTransform.NEGATIVE:
+        output = 255 - image
+        transform = np.arange(255, -1, -1, dtype="uint8")
+    
+    return output, transform
 
 def create_transform_plot(transform, title="Transformation Function"):
     fig, subfig = plt.subplots(1, 1, figsize=(5,5))
@@ -30,20 +45,35 @@ def update_transform_plot(transform, fig, fill, line):
     fig.canvas.draw()
     fig.canvas.flush_events()
 
-def do_transform(image, chosenT):
-    
-    output = np.copy(image)
-    transform = np.arange(256, dtype="uint8")
-    
-    return output, transform
-
 ###############################################################################
 # MAIN
 ###############################################################################
 
 def main(): 
     
-    chosenT = 0
+    image = np.array([[0,1,2,3],
+                      [3,2,1,0],
+                      [2,0,3,1]], dtype="uint8")
+    print(image)
+    print(image.shape)
+    
+    lut = np.array([3,2,1,0], dtype="float64") # WARNING: should be uint8 for LUT!!!!!
+    
+    #output = np.copy(image)
+    #for r in range(image.shape[0]):
+    #    for c in range(image.shape[1]):
+    #        val = image[r,c]
+    #        output[r,c] = lut[val]
+    output = lut[image]
+    print(output)
+    print(output.shape, output.dtype)
+    
+    
+    print("INTENSITY TRANSFORMATIONS:")
+    for index, item in enumerate(list(IntTransform)):
+        print(index, "-", item.value)
+    chosen_index = int(input("Enter choice: "))
+    chosenT = list(IntTransform)[chosen_index]
         
     plt.ion()
     tfig, tfill, tline = create_transform_plot(np.arange(256))
