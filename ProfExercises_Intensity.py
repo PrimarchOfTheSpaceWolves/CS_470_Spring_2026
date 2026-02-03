@@ -10,12 +10,44 @@ import pandas
 import sklearn
 import timm
 import torchvision
+import matplotlib.pyplot as plt
+
+def create_transform_plot(transform, title="Transformation Function"):
+    fig, subfig = plt.subplots(1, 1, figsize=(5,5))
+    x = np.arange(256)
+    line = subfig.plot(x, transform, color="black", linewidth=1)
+    fill = subfig.fill_between(x, transform, color="gray", alpha=0.5)
+    subfig.set_xlim([0, 255])
+    subfig.set_ylim([0, 255])
+    subfig.set_title(title)
+    subfig.set_xlabel("Input Intensity")
+    subfig.set_ylabel("Output Intensity")
+    return fig, fill, line[0]
+
+def update_transform_plot(transform, fig, fill, line):
+    line.set_ydata(transform)
+    fill.set_verts([np.column_stack([np.arange(256), transform])])
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
+def do_transform(image, chosenT):
+    
+    output = np.copy(image)
+    transform = np.arange(256, dtype="uint8")
+    
+    return output, transform
 
 ###############################################################################
 # MAIN
 ###############################################################################
 
-def main():        
+def main(): 
+    
+    chosenT = 0
+        
+    plt.ion()
+    tfig, tfill, tline = create_transform_plot(np.arange(256))
+           
     ###############################################################################
     # PYTORCH
     ###############################################################################
@@ -42,6 +74,7 @@ def main():
     # OPENCV
     ###############################################################################
     if len(sys.argv) <= 1:
+                
         # Webcam
         print("Opening the webcam...")
 
@@ -63,8 +96,14 @@ def main():
             # Get next frame from camera
             _, image = camera.read()
             
+            grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            output, transform = do_transform(grayscale, chosenT)
+            
+            update_transform_plot(transform, tfig, tfill, tline)
+                        
             # Show the image
-            cv2.imshow(windowName, image)
+            cv2.imshow(windowName, grayscale)
+            cv2.imshow("OUTPUT", output)
 
             # Wait 30 milliseconds, and grab any key presses
             key = cv2.waitKey(30)
@@ -72,6 +111,7 @@ def main():
         # Release the camera and destroy the window
         camera.release()
         cv2.destroyAllWindows()
+        plt.close()
 
         # Close down...
         print("Closing application...")
@@ -90,20 +130,27 @@ def main():
         if image is None:
             print("ERROR: Could not open or find the image!")
             exit(1)
-
-        # Show our image (with the filename as the window title)
-        windowTitle = "PYTHON: " + filename
-        
+            
+        grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                
         key = -1
-        while key == -1:
-            # Show image
-            cv2.imshow(windowTitle, image)
+        while key == -1:        
+            # Show our image (with the filename as the window title)
+            windowTitle = "PYTHON: " + filename
+            cv2.imshow(windowTitle, grayscale)
+            
+            output, transform = do_transform(grayscale, chosenT)
+            
+            cv2.imshow("OUTPUT", output)
+            
+            update_transform_plot(transform, tfig, tfill, tline)
 
             # Wait for a keystroke to close the window
             key = cv2.waitKey(30)
 
         # Cleanup this window
         cv2.destroyAllWindows()
+        plt.close()
 
 # The main function
 if __name__ == "__main__": 
