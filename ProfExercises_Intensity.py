@@ -57,8 +57,7 @@ def create_transform_plot(transform, title="Transformation Function"):
     return fig, fill, line[0]
 
 def update_transform_plot(transform, fig, fill, line):
-    line.set_ydata(transform)
-    print(transform)
+    line.set_ydata(transform)    
     fill.set_verts([np.column_stack([np.arange(256), transform])])
     fig.canvas.draw()
     fig.canvas.flush_events()
