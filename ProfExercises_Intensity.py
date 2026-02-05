@@ -16,6 +16,8 @@ from enum import Enum
 class IntTransform(Enum):
     ORIGINAL = "Original"
     NEGATIVE = "Negative"
+    SLICE = "Intensity Slicing"
+    STRETCH = "Constrast Stretching"
     
 def do_transform(image, chosenT):
     if chosenT == IntTransform.ORIGINAL:
@@ -24,6 +26,21 @@ def do_transform(image, chosenT):
     elif chosenT == IntTransform.NEGATIVE:
         output = 255 - image
         transform = np.arange(255, -1, -1, dtype="uint8")
+    elif chosenT == IntTransform.SLICE:
+        windowMin = 100
+        windowMax = 150
+        lut = np.zeros((256,), dtype="uint8")
+        lut[windowMin:(windowMax+1)] = 255
+        output = lut[image]
+        transform = lut
+    elif chosenT == IntTransform.STRETCH:
+        points = [[0,0], [127,50], [150,200], [255,255]]
+        r_knots, s_knots = zip(*points)
+        one_inter = lambda r: np.interp(r, r_knots, s_knots)
+        r_values = np.arange(256, dtype="float64")
+        s_values = one_inter(r_values)
+        transform = np.clip(np.round(s_values),0,255).astype("uint8")
+        output = transform[image]
     
     return output, transform
 
@@ -41,6 +58,7 @@ def create_transform_plot(transform, title="Transformation Function"):
 
 def update_transform_plot(transform, fig, fill, line):
     line.set_ydata(transform)
+    print(transform)
     fill.set_verts([np.column_stack([np.arange(256), transform])])
     fig.canvas.draw()
     fig.canvas.flush_events()
