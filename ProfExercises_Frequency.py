@@ -26,7 +26,15 @@ def complex_to_polar(complex_data):
     phase = np.angle(complex_data)
     return mag, phase
 
-
+def make_simple_complex(length=600):
+    hl = length/2
+    complex_data = np.zeros((length, length), dtype="complex")
+    values = np.arange(-hl, hl, 1)
+    complex_data[:] = values
+    complex_data += np.reshape(1j*values, (-1,1))
+    #print(complex_data)
+    return complex_data
+    
 
 def do_frequency(image):
     output = np.copy(image)
@@ -37,7 +45,26 @@ def do_frequency(image):
 # MAIN
 ###############################################################################
 
-def main():        
+def main(): 
+    
+    complex_data = make_simple_complex(length=600)
+    mag, phase = complex_to_polar(complex_data)
+    complex_image = to_complex_image(complex_data)
+    
+    cv2.normalize(complex_image, complex_image, norm_type=cv2.NORM_MINMAX)
+    cv2.normalize(mag, mag, norm_type=cv2.NORM_MINMAX)
+    cv2.normalize(phase, phase, norm_type=cv2.NORM_MINMAX)
+    
+    cv2.imshow("X", complex_image[...,0])
+    cv2.imshow("Y", complex_image[...,1])
+    cv2.imshow("Magnitude", mag)
+    cv2.imshow("Phase", phase)
+    cv2.waitKey(-1)
+    cv2.destroyAllWindows()
+    
+    exit()
+       
+           
     ###############################################################################
     # PYTORCH
     ###############################################################################
